@@ -1,0 +1,273 @@
+<!doctype html>
+<!-- Sondaże wyborcze - autor Adam Bryks 2026 -->
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sondaże wyborcze</title>
+<meta name="author" content="Adam Bryks">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="ikona-192.png">
+<link rel="apple-touch-icon" href="ikona-192.png">
+<meta name="theme-color" content="#14283a">
+<style>
+  :root { --bg:#f2f4f6; --card:#fff; --ink:#15212b; --dim:#5f6d78; --line:#dde3e8; --acc:#1d5f8c; --head:#14283a; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 system-ui, "Segoe UI", Arial, sans-serif; }
+  button, select, input { font:inherit; color:inherit; }
+  .top { background:var(--head); color:#fff; padding:18px 16px 16px; }
+  .top .in, .wrap { max-width:1100px; margin:0 auto; }
+  .top h1 { margin:0; font-size:clamp(24px,4vw,34px); letter-spacing:.3px; }
+  .top .sub { opacity:.8; font-size:15px; margin-top:2px; }
+  .top .bar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px; }
+  .top select { background:#fff; color:var(--ink); border:none; border-radius:10px; padding:8px 12px; font-weight:600; max-width:100%; }
+  .top .upd { font-size:13px; opacity:.75; }
+  .btn { border:1px solid var(--line); background:#fff; border-radius:10px; padding:7px 12px; font-weight:600; cursor:pointer; }
+  .top .btn { background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.25); color:#fff; }
+  .wrap { padding:14px 16px 40px; }
+  .card { background:var(--card); border-radius:16px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.06); margin-bottom:14px; }
+  .card h2 { margin:0 0 4px; font-size:19px; }
+  .card .note { color:var(--dim); font-size:14px; margin:0 0 10px; }
+  .inst { display:flex; flex-wrap:wrap; gap:8px; }
+  .inst label { display:flex; gap:8px; align-items:center; border:1px solid var(--line); border-radius:12px; padding:7px 11px; cursor:pointer; background:#fafbfc; user-select:none; }
+  .inst label.off { opacity:.5; background:#fff; }
+  .inst label small { color:var(--dim); font-size:12px; display:block; line-height:1.2; }
+  .inst input { width:18px; height:18px; accent-color:var(--acc); }
+  .instBtns { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  /* slupki */
+  .bars { display:flex; align-items:flex-end; gap:clamp(4px,1.5vw,14px); height:300px; padding:26px 4px 0; position:relative; border-bottom:2px solid var(--head); }
+  .bars .col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; min-width:0; position:relative; z-index:1; }
+  .bars .v { font-weight:800; font-size:clamp(13px,2.2vw,18px); margin-bottom:4px; white-space:nowrap; }
+  .bars .b { width:100%; border-radius:6px 6px 0 0; border:1px solid rgba(0,0,0,.25); transition:height .4s; }
+  .bars .d { font-size:12px; font-weight:700; margin-top:2px; white-space:nowrap; }
+  @media (max-width:600px) { .bars .d { font-size:9px; letter-spacing:-.3px; } .bars .v { font-size:12px; } }
+  .bars .d.up { color:#2e8b3e; } .bars .d.dn { color:#c0392b; }
+  .thr { position:absolute; left:0; right:0; border-top:2px dashed #c0392b; z-index:2; pointer-events:none; }
+  .thr span { position:absolute; left:0; top:-19px; font-size:12px; color:#c0392b; font-weight:700; background:var(--card); padding:0 4px; }
+  .names { display:flex; gap:clamp(4px,1.5vw,14px); padding:6px 4px 0; }
+  .names div { flex:1; text-align:center; font-size:clamp(11px,2vw,15px); font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .basis { font-size:13px; color:var(--dim); margin-top:10px; }
+  /* tabela */
+  .tw { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:14px; }
+  th, td { padding:7px 8px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+  th:first-child, td:first-child { text-align:left; position:sticky; left:0; background:var(--card); }
+  th { font-size:13px; color:var(--dim); }
+  tr.off td { opacity:.4; }
+  td .tk { display:block; font-size:11px; color:var(--dim); }
+  td.avg { font-weight:800; }
+  tr.avgRow td { background:#eef4f8; font-weight:800; }
+  tr.avgRow td:first-child { background:#eef4f8; }
+  /* trend */
+  .trendBar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:6px; }
+  #trend { width:100%; height:auto; display:block; }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:8px; font-size:14px; }
+  .legend label { display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none; }
+  .legend i { width:16px; height:4px; border-radius:2px; display:inline-block; }
+  .legend label.off { opacity:.35; }
+  .msg { padding:14px; border-radius:12px; background:#fff3d6; color:#7a5300; margin-bottom:14px; }
+  .msg:empty { display:none; }
+  footer { text-align:center; color:#8a949b; font-size:13px; margin-top:20px; }
+  footer a { color:inherit; }
+  .tip { position:fixed; pointer-events:none; background:#14283a; color:#fff; font-size:13px; padding:7px 10px; border-radius:8px; z-index:20; display:none; white-space:nowrap; }
+</style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <h1>&#128202; Sondaże wyborcze</h1>
+  <div class="sub">Wszystkie instytuty w jednym miejscu - wybierz sam, których sondaży używać</div>
+  <div class="bar">
+    <select id="parl" aria-label="Parlament"></select>
+    <button class="btn" id="reload" title="Pobierz najnowsze dane">&#128260; Odśwież</button>
+    <span class="upd" id="upd">wczytuję dane…</span>
+  </div>
+</div></div>
+
+<div class="wrap">
+  <div class="msg" id="msg"></div>
+
+  <div class="card">
+    <h2>Instytuty badania opinii</h2>
+    <p class="note">Odznacz instytut, a jego sondaże nie będą liczone do średniej ani do wykresu. Pod nazwą - kto ostatnio zamówił sondaż. Wybór zapamiętuje się w przeglądarce.</p>
+    <div class="inst" id="inst"></div>
+    <div class="instBtns"><button class="btn" id="allOn">Zaznacz wszystkie</button><button class="btn" id="allOff">Odznacz wszystkie</button></div>
+  </div>
+
+  <div class="card">
+    <h2 id="avgTitle">Średnia z najnowszych sondaży</h2>
+    <p class="note" id="avgNote"></p>
+    <div class="bars" id="bars"></div>
+    <div class="names" id="names"></div>
+    <div class="basis" id="basis"></div>
+  </div>
+
+  <div class="card">
+    <h2>Najnowszy sondaż każdego instytutu</h2>
+    <p class="note">Wyniki w procentach. Wyszarzone wiersze - instytut odznaczony albo sondaż starszy niż okres średniej.</p>
+    <div class="tw"><table id="tbl"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Jak to się zmieniało</h2>
+    <div class="trendBar"><span class="note" style="margin:0">Średnia miesięczna z zaznaczonych instytutów:</span>
+      <select class="btn" id="span"><option value="6">6 miesięcy</option><option value="12" selected>12 miesięcy</option><option value="24">2 lata</option><option value="48">4 lata</option></select></div>
+    <svg id="trend" viewBox="0 0 1000 420" role="img" aria-label="Wykres zmian w sondażach"></svg>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <footer>Dane: <a href="https://dawum.de" target="_blank" rel="noopener">dawum.de</a> (licencja <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODC-ODbL</a>) - zbiór wszystkich opublikowanych sondaży z wielu instytutów.<br>Sondaże wyborcze · autor Adam Bryks 2026</footer>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+'use strict';
+const API = 'https://api.dawum.de/';
+const AVG_DAYS = 42;   // do sredniej: najnowszy sondaz kazdego instytutu, nie starszy niz 6 tygodni
+const $ = (s) => document.querySelector(s);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('sondaze_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('sondaze_' + k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+const COLORS = { 'CDU/CSU': '#222222', 'CDU': '#222222', 'CSU': '#1c4f9c', 'AfD': '#2f7bdc', 'SPD': '#e3000f', 'Grüne': '#4fa31b', 'Linke': '#b2207a', 'Die Linke': '#b2207a', 'BSW': '#7b2160', 'FDP': '#f2c500', 'Freie Wähler': '#f08a00', 'FW': '#f08a00', 'SSW': '#003c8f', 'Tierschutzpartei': '#0f8a8a', 'Piraten': '#ff8800', 'Volt': '#502379', 'Bürger in Wut': '#1b5e7a', 'BVB/FW': '#f08a00', 'Sonstige': '#9aa3aa' };
+const colorOf = (n) => COLORS[n] || '#' + ((Array.from(n).reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) & 0x7f7f7f) + 0x303030).toString(16).padStart(6, '0').slice(-6);
+const fmt = (x) => (Math.round(x * 10) / 10).toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const dayMs = 86400000, parseD = (s) => new Date(String(s).slice(0, 10) + 'T12:00:00').getTime(), dstr = (t) => new Date(t).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' });
+
+let DB = null, parlId = store.get('parl', null), hiddenParties = new Set(store.get('hide', []));
+
+/* ---------- dane ---------- */
+function slim(db) {
+  // tylko to, czego strona potrzebuje (mniejszy zapis w przegladarce)
+  const keep = {}, cutoff = Date.now() - 5 * 365 * dayMs;
+  for (const [id, s] of Object.entries(db.Surveys || {})) if (parseD(s.Date) >= cutoff) keep[id] = { Date: s.Date, Parliament_ID: String(s.Parliament_ID), Institute_ID: String(s.Institute_ID), Tasker_ID: String(s.Tasker_ID), Surveyed_Persons: s.Surveyed_Persons, Results: s.Results };
+  return { Database: db.Database || {}, Parliaments: db.Parliaments || {}, Institutes: db.Institutes || {}, Taskers: db.Taskers || {}, Parties: db.Parties || {}, Surveys: keep };
+}
+async function load(force) {
+  const cached = store.get('db', null);
+  if (cached && !force) { DB = cached; render(); }
+  try {
+    const r = await fetch(API, { cache: 'no-cache' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    DB = slim(await r.json());
+    store.set('db', DB); store.set('dbTime', Date.now());
+    $('#msg').textContent = '';
+    render();
+  } catch (e) {
+    if (DB) $('#msg').textContent = 'Nie udało się pobrać najnowszych danych (' + e.message + ') - pokazuję ostatnio zapisane z ' + dstr(store.get('dbTime', Date.now())) + '.';
+    else { $('#msg').textContent = 'Nie udało się pobrać danych z dawum.de (' + e.message + '). Sprawdź internet i kliknij „Odśwież”.'; $('#upd').textContent = ''; }
+  }
+}
+
+/* ---------- pomocnicze ---------- */
+const partyName = (id) => { const p = DB.Parties[id]; return p ? (p.Shortcut || p.Name || '?') : '?'; };
+const instName = (id) => (DB.Institutes[id] || {}).Name || '?';
+const taskName = (id) => (DB.Taskers[id] || {}).Name || '';
+const instOn = (id) => !store.get('instOff', []).includes(String(id));
+function surveysOf(pid) { return Object.entries(DB.Surveys).filter(([, s]) => s.Parliament_ID === String(pid)).map(([id, s]) => Object.assign({ id, t: parseD(s.Date) }, s)).sort((a, b) => b.t - a.t); }
+function newestPerInst(list) { const m = new Map(); for (const s of list) if (!m.has(s.Institute_ID)) m.set(s.Institute_ID, s); return [...m.values()]; }
+function average(list) {
+  const sum = {}, cnt = {};
+  for (const s of list) for (const [p, v] of Object.entries(s.Results || {})) { const x = Number(v); if (!isFinite(x)) continue; sum[p] = (sum[p] || 0) + x; cnt[p] = (cnt[p] || 0) + 1; }
+  // partia liczona tylko z instytutow, ktore ja podaja; "Sonstige" (id 0) na koncu
+  return Object.keys(sum).map(p => ({ p, v: sum[p] / cnt[p], n: cnt[p] }));
+}
+const isOther = (p) => p === '0' || /^sonstige$/i.test(partyName(p));
+const order = (a, b) => isOther(a.p) - isOther(b.p) || b.v - a.v;
+
+/* ---------- rysowanie ---------- */
+function render() {
+  if (!DB) return;
+  // parlamenty: Bundestag pierwszy, potem landy alfabetycznie (tylko te z sondazami w ostatnim roku)
+  const recent = Date.now() - 365 * dayMs, used = new Set(Object.values(DB.Surveys).filter(s => parseD(s.Date) >= recent).map(s => s.Parliament_ID));
+  const parls = Object.entries(DB.Parliaments).filter(([id]) => used.has(String(id))).sort((a, b) => (b[1].Shortcut === 'Bundestag') - (a[1].Shortcut === 'Bundestag') || String(a[1].Name).localeCompare(String(b[1].Name), 'de'));
+  if (!parlId || !used.has(String(parlId))) parlId = (parls.find(([, p]) => p.Shortcut === 'Bundestag') || parls[0] || ['0'])[0];
+  $('#parl').innerHTML = parls.map(([id, p]) => `<option value="${esc(id)}"${String(id) === String(parlId) ? ' selected' : ''}>${esc(p.Shortcut === 'Bundestag' ? 'Bundestag (całe Niemcy)' : (p.Name || p.Shortcut))}</option>`).join('');
+  const lu = DB.Database && DB.Database.Last_Update;
+  $('#upd').textContent = lu ? 'dane z: ' + new Date(lu).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+
+  const all = surveysOf(parlId), newest = newestPerInst(all), now = Date.now();
+  // instytuty z sondazami dla tego parlamentu w ostatnich 2 latach
+  const insts = newestPerInst(all.filter(s => s.t >= now - 730 * dayMs));
+  $('#inst').innerHTML = insts.map(s => `<label class="${instOn(s.Institute_ID) ? '' : 'off'}"><input type="checkbox" data-inst="${esc(s.Institute_ID)}"${instOn(s.Institute_ID) ? ' checked' : ''}><span>${esc(instName(s.Institute_ID))}<small>${esc(taskName(s.Tasker_ID) || '-')} · ${dstr(s.t)}</small></span></label>`).join('') || '<span class="note">Brak sondaży.</span>';
+
+  // srednia
+  const fresh = newest.filter(s => s.t >= now - AVG_DAYS * dayMs), use = fresh.filter(s => instOn(s.Institute_ID));
+  const avg = average(use).sort(order);
+  // zmiana: srednia z poprzednich sondazy tych samych instytutow
+  const prev = {}; for (const s of use) { const older = all.find(x => x.Institute_ID === s.Institute_ID && x.t < s.t); if (older) prev[s.Institute_ID] = older; }
+  const avgPrev = average(Object.values(prev)), pm = Object.fromEntries(avgPrev.map(x => [x.p, x.v]));
+  const pName = DB.Parliaments[parlId] ? (DB.Parliaments[parlId].Shortcut === 'Bundestag' ? 'Bundestag' : DB.Parliaments[parlId].Name) : '';
+  $('#avgTitle').textContent = 'Średnia z najnowszych sondaży - ' + pName;
+  $('#avgNote').textContent = use.length ? `Najnowszy sondaż każdego zaznaczonego instytutu z ostatnich ${AVG_DAYS / 7} tygodni (${use.length} ${use.length === 1 ? 'sondaż' : use.length < 5 ? 'sondaże' : 'sondaży'}), każdy instytut liczy się tak samo. Pod słupkiem - zmiana od poprzedniego sondażu tych instytutów.` : 'Brak świeżych sondaży z zaznaczonych instytutów - zaznacz więcej instytutów.';
+  const maxV = Math.max(30, ...avg.map(x => x.v)) * 1.08;
+  $('#bars').innerHTML = avg.map(x => { const n = partyName(x.p) || 'Sonstige', d = pm[x.p] != null ? x.v - pm[x.p] : null;
+    return `<div class="col" title="${esc(n)}: ${fmt(x.v)}% (z ${x.n} ${x.n === 1 ? 'sondażu' : 'sondaży'})"><div class="v">${fmt(x.v)}</div><div class="b" style="height:${x.v / maxV * 100}%;background:${colorOf(isOther(x.p) ? 'Sonstige' : n)}"></div>${d != null && Math.abs(d) >= 0.05 ? `<div class="d ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '▲ +' : '▼ '}${fmt(d)}</div>` : '<div class="d">&nbsp;</div>'}</div>`; }).join('')
+    + (avg.length ? `<div class="thr" style="bottom:calc(${5 / maxV * 100}% * (1 - 26/300) + 0px)"><span>próg 5%</span></div>` : '');
+  $('#names').innerHTML = avg.map(x => `<div title="${esc(partyName(x.p))}">${esc(isOther(x.p) ? 'Inne' : partyName(x.p))}</div>`).join('');
+  $('#basis').textContent = use.length ? 'Liczone z: ' + use.map(s => instName(s.Institute_ID) + ' (' + dstr(s.t) + ')').join(', ') : '';
+  fixThreshold(maxV);
+
+  // tabela
+  const cols = avg.length ? avg.map(x => x.p) : average(newest).sort(order).map(x => x.p);
+  for (const s of newest) for (const p of Object.keys(s.Results || {})) if (!cols.includes(p)) cols.splice(cols.findIndex(isOther) >= 0 ? cols.findIndex(isOther) : cols.length, 0, p);
+  const show = newest.filter(s => s.t >= now - 730 * dayMs);
+  $('#tbl').innerHTML = `<thead><tr><th>Instytut / zleceniodawca</th><th>Data</th><th>Osób</th>${cols.map(p => `<th style="color:${colorOf(isOther(p) ? 'Sonstige' : partyName(p))}">${esc(isOther(p) ? 'Inne' : partyName(p))}</th>`).join('')}</tr></thead><tbody>`
+    + (avg.length ? `<tr class="avgRow"><td>Średnia (zaznaczone)</td><td></td><td></td>${cols.map(p => { const a = avg.find(x => x.p === p); return `<td>${a ? fmt(a.v) : '-'}</td>`; }).join('')}</tr>` : '')
+    + show.map(s => `<tr class="${instOn(s.Institute_ID) && s.t >= now - AVG_DAYS * dayMs ? '' : 'off'}"><td>${esc(instName(s.Institute_ID))}<span class="tk">${esc(taskName(s.Tasker_ID))}</span></td><td>${dstr(s.t)}</td><td>${s.Surveyed_Persons ? Number(s.Surveyed_Persons).toLocaleString('pl-PL') : '-'}</td>${cols.map(p => `<td>${s.Results && s.Results[p] != null ? fmt(Number(s.Results[p])) : '-'}</td>`).join('')}</tr>`).join('') + '</tbody>';
+
+  drawTrend(all);
+}
+function fixThreshold(maxV) {
+  // linia 5% dokladnie na wysokosci 5% slupka
+  const bars = $('#bars'), thr = bars.querySelector('.thr'); if (!thr) return;
+  const H = bars.clientHeight - 26, col = bars.querySelector('.col'); if (!col) return;
+  const v = col.querySelector('.v'), d = col.querySelector('.d'), avail = H - v.offsetHeight - 4 - d.offsetHeight - 2;
+  thr.style.bottom = (d.offsetHeight + 2 + 5 / maxV * avail) + 'px';
+}
+
+function drawTrend(all) {
+  const months = +$('#span').value, now = new Date(), start = new Date(now.getFullYear(), now.getMonth() - months + 1, 1).getTime();
+  const use = all.filter(s => s.t >= start && instOn(s.Institute_ID));
+  const svg = $('#trend'), small = svg.clientWidth && svg.clientWidth < 600, W = small ? 480 : 1000, H = small ? 360 : 420, L = small ? 38 : 44, R = small ? 10 : 16, T = 14, B = 34;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  if (!use.length) { svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" text-anchor="middle" fill="#5f6d78" font-size="16">Brak sondaży z zaznaczonych instytutów w tym okresie</text>`; $('#legend').innerHTML = ''; return; }
+  // miesieczne srednie: najpierw srednia kazdego instytutu w miesiacu, potem srednia instytutow
+  const mk = (t) => { const d = new Date(t); return d.getFullYear() * 12 + d.getMonth(); }, m0 = mk(start), m1 = mk(now.getTime());
+  const byM = new Map();
+  for (const s of use) { const m = mk(s.t); if (!byM.has(m)) byM.set(m, new Map()); const im = byM.get(m); if (!im.has(s.Institute_ID)) im.set(s.Institute_ID, []); im.get(s.Institute_ID).push(s); }
+  const series = {};
+  for (let m = m0; m <= m1; m++) {
+    const im = byM.get(m); if (!im) continue;
+    const perInst = [...im.values()].map(list => ({ Results: Object.fromEntries(average(list).map(x => [x.p, x.v])) }));
+    for (const x of average(perInst)) (series[x.p] = series[x.p] || []).push([m, x.v]);
+  }
+  const parties = Object.keys(series).filter(p => !isOther(p) && series[p].length).sort((a, b) => series[b][series[b].length - 1][1] - series[a][series[a].length - 1][1]);
+  const vis = parties.filter(p => !hiddenParties.has(partyName(p)));
+  const maxV = Math.max(10, ...vis.flatMap(p => series[p].map(q => q[1]))), top = Math.ceil(maxV / 5) * 5;
+  const X = (m) => L + (m1 === m0 ? 0.5 : (m - m0) / (m1 - m0)) * (W - L - R), Y = (v) => T + (1 - v / top) * (H - T - B);
+  let g = '';
+  for (let v = 0; v <= top; v += 5) g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v === 5 ? '#c0392b' : '#e3e8ec'}" stroke-width="${v === 5 ? 1.5 : 1}"${v === 5 ? ' stroke-dasharray="6 5"' : ''}/><text x="${L - 8}" y="${Y(v) + 5}" text-anchor="end" font-size="14" fill="#5f6d78">${v}%</text>`;
+  const stepM = Math.max(1, Math.ceil((m1 - m0 + 1) / (small ? 6 : 12))), MN = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
+  for (let m = m0; m <= m1; m += stepM) { const mm = ((m % 12) + 12) % 12; g += `<text x="${X(m)}" y="${H - 10}" text-anchor="middle" font-size="13" fill="#5f6d78">${MN[mm]}${mm === 0 || m === m0 ? ' ' + String(Math.floor(m / 12)).slice(2) : ''}</text>`; }
+  for (const p of vis) { const c = colorOf(partyName(p)), pts = series[p].map(([m, v]) => `${X(m).toFixed(1)},${Y(v).toFixed(1)}`);
+    g += `<polyline points="${pts.join(' ')}" fill="none" stroke="${c}" stroke-width="${small ? 2.5 : 3}" stroke-linejoin="round" stroke-linecap="round"/>` + series[p].map(([m, v]) => `<circle cx="${X(m).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${small ? 3 : 4}" fill="${c}" data-tip="${esc(partyName(p))} · ${MN[((m % 12) + 12) % 12]} ${Math.floor(m / 12)}: ${fmt(v)}%"/>`).join(''); }
+  svg.innerHTML = g;
+  $('#legend').innerHTML = parties.map(p => { const n = partyName(p); return `<label class="${hiddenParties.has(n) ? 'off' : ''}"><input type="checkbox" hidden data-party="${esc(n)}"${hiddenParties.has(n) ? '' : ' checked'}><i style="background:${colorOf(n)}"></i>${esc(n)}</label>`; }).join('');
+}
+
+/* ---------- zdarzenia ---------- */
+$('#inst').addEventListener('change', (e) => { const id = e.target.dataset.inst; if (!id) return; const off = new Set(store.get('instOff', [])); if (e.target.checked) off.delete(id); else off.add(id); store.set('instOff', [...off]); render(); });
+$('#allOn').onclick = () => { store.set('instOff', []); render(); };
+$('#allOff').onclick = () => { store.set('instOff', [...document.querySelectorAll('[data-inst]')].map(x => x.dataset.inst).concat(store.get('instOff', []))); render(); };
+$('#parl').onchange = () => { parlId = $('#parl').value; store.set('parl', parlId); render(); };
+$('#span').onchange = () => { if (DB) drawTrend(surveysOf(parlId)); };
+$('#legend').addEventListener('change', (e) => { const n = e.target.dataset.party; if (!n) return; if (e.target.checked) hiddenParties.delete(n); else hiddenParties.add(n); store.set('hide', [...hiddenParties]); drawTrend(surveysOf(parlId)); });
+$('#reload').onclick = () => { $('#upd').textContent = 'pobieram…'; load(true); };
+$('#trend').addEventListener('pointermove', (e) => { const t = e.target.dataset && e.target.dataset.tip, tip = $('#tip'); if (t) { tip.textContent = t; tip.style.display = 'block'; tip.style.left = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8) + 'px'; tip.style.top = (e.clientY - 34) + 'px'; } else tip.style.display = 'none'; });
+$('#trend').addEventListener('pointerleave', () => { $('#tip').style.display = 'none'; });
+addEventListener('resize', () => { if (DB) render(); });
+load(false);
+</script>
+</body>
+</html>
