@@ -166,14 +166,23 @@ const taskName = (id) => (DB.Taskers[id] || {}).Name || '';
 const instOn = (id) => !store.get('instOff', []).includes(String(id));
 function surveysOf(pid) { return Object.entries(DB.Surveys).filter(([, s]) => s.Parliament_ID === String(pid)).map(([id, s]) => Object.assign({ id, t: parseD(s.Date) }, s)).sort((a, b) => b.t - a.t); }
 function newestPerInst(list) { const m = new Map(); for (const s of list) if (!m.has(s.Institute_ID)) m.set(s.Institute_ID, s); return [...m.values()]; }
+const isOther = (p) => p === '0' || /^sonstige$/i.test(partyName(p));
+const order = (a, b) => isOther(a.p) - isOther(b.p) || b.v - a.v;
 function average(list) {
   const sum = {}, cnt = {};
   for (const s of list) for (const [p, v] of Object.entries(s.Results || {})) { const x = Number(v); if (!isFinite(x)) continue; sum[p] = (sum[p] || 0) + x; cnt[p] = (cnt[p] || 0) + 1; }
   // partia liczona tylko z instytutow, ktore ja podaja; "Sonstige" (id 0) na koncu
   return Object.keys(sum).map(p => ({ p, v: sum[p] / cnt[p], n: cnt[p] }));
 }
-const isOther = (p) => p === '0' || /^sonstige$/i.test(partyName(p));
-const order = (a, b) => isOther(a.p) - isOther(b.p) || b.v - a.v;
+// srednia, ktora sumuje sie do 100%: osobno tylko partie podawane przez co najmniej polowe instytutow,
+// reszta (takze partie, ktore instytut wlicza do "Sonstige") = Inne
+function avgNorm(list, keep) {
+  if (!list.length) return [];
+  const raw = average(list).filter(x => !isOther(x.p)), need = Math.ceil(list.length / 2);
+  const shown = raw.filter(x => keep ? keep.has(x.p) : x.n >= need);
+  const sum = shown.reduce((a, x) => a + x.v, 0);
+  return shown.concat([{ p: '0', v: Math.max(0, 100 - sum), n: list.length }]);
+}
 
 /* ---------- rysowanie ---------- */
 function render() {
@@ -193,13 +202,13 @@ function render() {
 
   // srednia
   const fresh = newest.filter(s => s.t >= now - AVG_DAYS * dayMs), use = fresh.filter(s => instOn(s.Institute_ID));
-  const avg = average(use).sort(order);
+  const avg = avgNorm(use).sort(order), keepP = new Set(avg.map(x => x.p));
   // zmiana: srednia z poprzednich sondazy tych samych instytutow
   const prev = {}; for (const s of use) { const older = all.find(x => x.Institute_ID === s.Institute_ID && x.t < s.t); if (older) prev[s.Institute_ID] = older; }
-  const avgPrev = average(Object.values(prev)), pm = Object.fromEntries(avgPrev.map(x => [x.p, x.v]));
+  const avgPrev = avgNorm(Object.values(prev), keepP), pm = Object.fromEntries(avgPrev.map(x => [x.p, x.v]));
   const pName = DB.Parliaments[parlId] ? (DB.Parliaments[parlId].Shortcut === 'Bundestag' ? 'Bundestag' : DB.Parliaments[parlId].Name) : '';
   $('#avgTitle').textContent = 'Średnia z najnowszych sondaży - ' + pName;
-  $('#avgNote').textContent = use.length ? `Najnowszy sondaż każdego zaznaczonego instytutu z ostatnich ${AVG_DAYS / 7} tygodni (${use.length} ${use.length === 1 ? 'sondaż' : use.length < 5 ? 'sondaże' : 'sondaży'}), każdy instytut liczy się tak samo. Pod słupkiem - zmiana od poprzedniego sondażu tych instytutów.` : 'Brak świeżych sondaży z zaznaczonych instytutów - zaznacz więcej instytutów.';
+  $('#avgNote').textContent = use.length ? `Najnowszy sondaż każdego zaznaczonego instytutu z ostatnich ${AVG_DAYS / 7} tygodni (${use.length} ${use.length === 1 ? 'sondaż' : use.length < 5 ? 'sondaże' : 'sondaży'}), każdy instytut liczy się tak samo. Pod słupkiem - zmiana od poprzedniego sondażu tych instytutów. Osobno pokazane są partie, które podaje co najmniej połowa instytutów; „Inne” to reszta do 100%.` : 'Brak świeżych sondaży z zaznaczonych instytutów - zaznacz więcej instytutów.';
   const maxV = Math.max(30, ...avg.map(x => x.v)) * 1.08;
   $('#bars').innerHTML = avg.map(x => { const n = partyName(x.p) || 'Sonstige', d = pm[x.p] != null ? x.v - pm[x.p] : null;
     return `<div class="col" title="${esc(n)}: ${fmt(x.v)}% (z ${x.n} ${x.n === 1 ? 'sondażu' : 'sondaży'})"><div class="v">${fmt(x.v)}</div><div class="b" style="height:${x.v / maxV * 100}%;background:${colorOf(isOther(x.p) ? 'Sonstige' : n)}"></div>${d != null && Math.abs(d) >= 0.05 ? `<div class="d ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '▲ +' : '▼ '}${fmt(d)}</div>` : '<div class="d">&nbsp;</div>'}</div>`; }).join('')
@@ -240,7 +249,7 @@ function drawTrend(all) {
   for (let m = m0; m <= m1; m++) {
     const im = byM.get(m); if (!im) continue;
     const perInst = [...im.values()].map(list => ({ Results: Object.fromEntries(average(list).map(x => [x.p, x.v])) }));
-    for (const x of average(perInst)) (series[x.p] = series[x.p] || []).push([m, x.v]);
+    for (const x of avgNorm(perInst)) (series[x.p] = series[x.p] || []).push([m, x.v]);
   }
   const parties = Object.keys(series).filter(p => !isOther(p) && series[p].length).sort((a, b) => series[b][series[b].length - 1][1] - series[a][series[a].length - 1][1]);
   const vis = parties.filter(p => !hiddenParties.has(partyName(p)));
